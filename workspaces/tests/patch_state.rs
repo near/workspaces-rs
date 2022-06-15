@@ -32,7 +32,8 @@ async fn view_status_state(
                 "message": "hello",
         }))?
         .transact()
-        .await?;
+        .await?
+        .ok()?;
 
     let mut state_items = contract.view_state(&worker, None).await?;
     let state = state_items

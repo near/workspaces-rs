@@ -42,14 +42,16 @@ async fn create_ref(owner: &Account, worker: &Worker<Sandbox>) -> anyhow::Result
             "referral_fee": 1,
         }))?
         .transact()
-        .await?;
+        .await?
+        .ok()?;
 
     owner
         .call(&worker, ref_finance.id(), "storage_deposit")
         .args_json(serde_json::json!({}))?
         .deposit(parse_near!("30 mN"))
         .transact()
-        .await?;
+        .await?
+        .ok()?;
 
     Ok(ref_finance)
 }
@@ -71,20 +73,23 @@ async fn create_wnear(owner: &Account, worker: &Worker<Sandbox>) -> anyhow::Resu
             "total_supply": parse_near!("1,000,000,000 N"),
         }))?
         .transact()
-        .await?;
+        .await?
+        .ok()?;
 
     owner
         .call(&worker, wnear.id(), "storage_deposit")
         .args_json(serde_json::json!({}))?
         .deposit(parse_near!("0.008 N"))
         .transact()
-        .await?;
+        .await?
+        .ok()?;
 
     owner
         .call(&worker, wnear.id(), "near_deposit")
         .deposit(parse_near!("200 N"))
         .transact()
-        .await?;
+        .await?
+        .ok()?;
 
     Ok(wnear)
 }
@@ -107,7 +112,8 @@ async fn create_pool_with_liquidity(
         .call(worker, "extend_whitelisted_tokens")
         .args_json(serde_json::json!({ "tokens": token_ids }))?
         .transact()
-        .await?;
+        .await?
+        .ok()?;
 
     let pool_id: u64 = ref_finance
         .call(worker, "add_simple_pool")
@@ -127,7 +133,9 @@ async fn create_pool_with_liquidity(
         }))?
         .deposit(1)
         .transact()
-        .await?;
+        .await?
+        .ok()?;
+    ();
 
     deposit_tokens(worker, owner, &ref_finance, tokens).await?;
 
@@ -139,7 +147,9 @@ async fn create_pool_with_liquidity(
         }))?
         .deposit(parse_near!("1 N"))
         .transact()
-        .await?;
+        .await?
+        .ok()?;
+    ();
 
     Ok(pool_id)
 }
@@ -160,7 +170,9 @@ async fn deposit_tokens(
             }))?
             .deposit(parse_near!("1 N"))
             .transact()
-            .await?;
+            .await?
+            .ok()?;
+        ();
 
         owner
             .call(&worker, contract_id, "ft_transfer_call")
@@ -172,7 +184,9 @@ async fn deposit_tokens(
             .gas(parse_gas!("200 Tgas") as u64)
             .deposit(1)
             .transact()
-            .await?;
+            .await?
+            .ok()?;
+        ();
     }
 
     Ok(())
@@ -195,7 +209,9 @@ async fn create_custom_ft(
             "total_supply": parse_near!("1,000,000,000 N").to_string(),
         }))?
         .transact()
-        .await?;
+        .await?
+        .ok()?;
+    ();
 
     Ok(ft)
 }
