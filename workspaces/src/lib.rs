@@ -11,6 +11,7 @@ pub use cargo::compile_project;
 mod rpc;
 mod worker;
 
+pub mod error;
 pub mod network;
 pub mod operations;
 pub mod prelude;
