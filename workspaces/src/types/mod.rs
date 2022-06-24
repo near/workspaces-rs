@@ -28,6 +28,8 @@ pub type Balance = u128;
 /// Height of a specific block
 pub type BlockHeight = u64;
 
+/// StorageUsage is used to count the amount of storage used by a contract.
+pub type StorageUsage = u64;
 /// Key types supported for either a [`SecretKey`] or [`PublicKey`]
 #[derive(Debug, Copy, Clone, Serialize, Deserialize)]
 #[non_exhaustive]

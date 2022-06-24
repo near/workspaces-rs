@@ -1,9 +1,12 @@
-use crate::network::{AllowDevAccountCreation, NetworkClient, NetworkInfo, TopLevelAccountCreator};
-use crate::network::{Info, Sandbox};
+use crate::network::{
+    AllowDevAccountCreation, NetworkClient, NetworkInfo, PatchAccessKeyTransaction,
+    TopLevelAccountCreator,
+};
+use crate::network::{Info, Sandbox, PatchStateAccountTransaction, PatchStateTransaction};
 use crate::result::{CallExecution, CallExecutionDetails, ViewResultDetails};
 use crate::rpc::client::{Client, DEFAULT_CALL_DEPOSIT, DEFAULT_CALL_FN_GAS};
 use crate::rpc::patch::ImportContractTransaction;
-use crate::types::{AccountId, Gas, InMemorySigner, SecretKey};
+use crate::types::{AccountId, Gas, InMemorySigner, PublicKey, SecretKey};
 use crate::worker::Worker;
 use crate::{Account, Block, Contract};
 use crate::{AccountDetails, Network};
@@ -174,6 +177,18 @@ impl Worker<Sandbox> {
         self.workspace.import_contract(id, worker)
     }
 
+    /// Patch state into the sandbox network, using builder pattern. This will allow us to set
+    /// state that we have acquired in some manner. This allows us to test random cases that
+    /// are hard to come up naturally as state evolves.
+    pub fn patch_state_builder(&self, account_id: &AccountId) -> PatchStateTransaction {
+        self.workspace.patch_state(account_id.clone())
+    }
+
+    /// Patch account state using builder pattern
+    pub fn patch_account(&self, account_id: &AccountId) -> PatchStateAccountTransaction {
+        self.workspace.patch_account(account_id.clone())
+    }
+
     /// Patch state into the sandbox network, given a key and value. This will allow us to set
     /// state that we have acquired in some manner. This allows us to test random cases that
     /// are hard to come up naturally as state evolves.
@@ -183,7 +198,35 @@ impl Worker<Sandbox> {
         key: &[u8],
         value: &[u8],
     ) -> anyhow::Result<()> {
-        self.workspace.patch_state(contract_id, key, value).await
+        self.workspace
+            .patch_state(contract_id.clone())
+            .data(key, value)
+            .transact()
+            .await?;
+        Ok(())
+    }
+
+    /// Patch state into the sandbox network. Same as `patch_state` but accepts a sequence of key value pairs
+    pub async fn patch_state_multiple<'s>(
+        &'s self,
+        account_id: &AccountId,
+        kvs: impl IntoIterator<Item = (&'s [u8], &'s [u8])>,
+    ) -> anyhow::Result<()> {
+        self.workspace
+            .patch_state(account_id.clone())
+            .data_multiple(kvs)
+            .transact()
+            .await?;
+        Ok(())
+    }
+
+    pub fn patch_access_key(
+        &self,
+        account_id: &AccountId,
+        public_key: &PublicKey,
+    ) -> PatchAccessKeyTransaction {
+        self.workspace
+            .patch_access_key(account_id.clone(), public_key.clone())
     }
 
     /// Fast forward to a point in the future. The delta block height is supplied to tell the

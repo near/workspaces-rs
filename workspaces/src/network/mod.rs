@@ -10,6 +10,9 @@ mod server;
 mod testnet;
 pub(crate) mod variants;
 
+pub(crate) use sandbox::PatchAccessKeyTransaction;
+pub(crate) use sandbox::PatchStateAccountTransaction;
+pub(crate) use sandbox::PatchStateTransaction;
 pub(crate) use variants::DEV_ACCOUNT_SEED;
 
 pub use self::betanet::Betanet;
