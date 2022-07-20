@@ -277,3 +277,82 @@ impl From<AccessKey> for near_primitives::account::AccessKey {
         }
     }
 }
+
+/// Type representing the `block_id` parameter of an RPC query that can be supplied into
+/// viewing blocks or chunks from the network.
+#[derive(Debug)]
+#[non_exhaustive]
+pub enum BlockId {
+    Height(BlockHeight),
+    Hash(CryptoHash),
+}
+
+impl From<BlockId> for near_primitives::types::BlockId {
+    fn from(id: BlockId) -> Self {
+        match id {
+            BlockId::Height(height) => Self::Height(height),
+            BlockId::Hash(hash) => Self::Hash(near_primitives::hash::CryptoHash(hash.0)),
+        }
+    }
+}
+
+/// Finality of a transaction or block in which transaction is included in. For more info
+/// go to the [NEAR finality](https://docs.near.org/docs/concepts/transaction#finality) docs
+#[derive(Debug)]
+#[non_exhaustive]
+pub enum Finality {
+    /// Optimistic finality
+    None,
+    /// Near-final finality
+    DoomSlug,
+    /// Final finality
+    Final,
+}
+
+impl From<Finality> for near_primitives::types::Finality {
+    fn from(finality: Finality) -> Self {
+        match finality {
+            Finality::None => Self::None,
+            Finality::DoomSlug => Self::DoomSlug,
+            Finality::Final => Self::Final,
+        }
+    }
+}
+
+/// The block reference into the chain. This can be something like [`Finality`] or
+/// [`BlockId`] to allow querying into the chain at that specific block reference.
+#[derive(Debug)]
+#[non_exhaustive]
+pub enum BlockReference {
+    BlockId(BlockId),
+    Finality(Finality),
+}
+
+impl BlockReference {
+    /// The latest block produced in the blockchain, but not necessarily the latest
+    /// finalized block.
+    pub fn latest() -> Self {
+        Self::Finality(Finality::None)
+    }
+}
+
+impl From<BlockId> for BlockReference {
+    fn from(block_id: BlockId) -> Self {
+        Self::BlockId(block_id)
+    }
+}
+
+impl From<Finality> for BlockReference {
+    fn from(finality: Finality) -> Self {
+        Self::Finality(finality)
+    }
+}
+
+impl From<BlockReference> for near_primitives::types::BlockReference {
+    fn from(block_ref: BlockReference) -> Self {
+        match block_ref {
+            BlockReference::BlockId(id) => Self::BlockId(id.into()),
+            BlockReference::Finality(finality) => Self::Finality(finality.into()),
+        }
+    }
+}
